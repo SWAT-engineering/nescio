@@ -12,5 +12,3 @@ rule HideIPDst:
 
 @(nl.cwi.anon.IPAddressEncrypter)	
 algorithm encryptIP(str key, int mask)
-
-
