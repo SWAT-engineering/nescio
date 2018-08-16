@@ -10,7 +10,7 @@ rule HideIPsrc:
 rule HideIPDst:
 	IPPacket.head.dstAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
 
-@(nl.cwi.anon.FFXIPAddress)	
-algorithm ffx_IPaddress(str key, int mask)
+@(nl.cwi.anon.IPAddressEncrypter)	
+algorithm encryptIP(str key, int mask)
 
 
