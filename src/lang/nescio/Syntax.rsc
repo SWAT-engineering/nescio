@@ -18,7 +18,7 @@ lexical Id
 lexical DId = Id | "_";
 
 syntax Import
-	= "import" Id "using" LangId
+	= "import" Id "from" LangId
 	;
 
 	
@@ -33,7 +33,11 @@ syntax Prog
 syntax Decl
 	= Rule
 	| Trafo
+	| Constant
 	;
+	
+syntax Constant
+	= Type Id "=" Expr;	
 	
 syntax Rule
 	= "rule" Id ":" Pattern "=\>" Id Args?
@@ -70,6 +74,7 @@ syntax Expr
 	| HexIntegerLiteral
 	| BitLiteral
 	| StringLiteral
+	| Id
 	;	
 	
 lexical NatLiteral
