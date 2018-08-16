@@ -7,6 +7,7 @@ str ENCRYPTION_CONSTANT = "30313233343536373839414243444546"
 rule HideSrcIP:
 	IPPacket/head/srcAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
 
+
 rule HideDestIP:
 	IPPacket/head/dstAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
 	
@@ -19,3 +20,5 @@ rule HideAllIPs:
 
 @(nl.cwi.anon.IPAddressEncrypter)	
 algorithm encryptIP(str key, int mask)
+
+

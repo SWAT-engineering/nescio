@@ -45,9 +45,9 @@ syntax Rule
 
 syntax Pattern
 	= Id
-	| Pattern "\a2F" Pattern
+	| Id "\a2F" Pattern
 	| "[" Id "]"
-	| "**"
+	| "**" "\a2F" Pattern
 	;
 	
 syntax Trafo
