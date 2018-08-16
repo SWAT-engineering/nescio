@@ -45,10 +45,11 @@ syntax Rule
 
 syntax Pattern
 	= Id
-	| Id "." Pattern
+	| Pattern "\a2F" Pattern
+	| "[" Id "]"
+	| "**"
+	;
 	
-	;	
-
 syntax Trafo
 	= "@" "(" JavaId ")" "algorithm" Id Formals?
 	;

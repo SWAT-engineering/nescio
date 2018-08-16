@@ -1,14 +1,21 @@
 module IP_anonymzation
 
-import TCP_IP from bird
+import TCP_IP_with_structured_IPs from bird
 
 str ENCRYPTION_CONSTANT = "30313233343536373839414243444546" 
 
-rule HideIPsrc:
-	IPPacket.head.srcAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
+rule HideSrcIP:
+	IPPacket/head/srcAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
 
-rule HideIPDst:
-	IPPacket.head.dstAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
+rule HideDestIP:
+	IPPacket/head/dstAddress => encryptIP(ENCRYPTION_CONSTANT, 16)
+	
+// The same two rules above can be replaced by a deep matching policy
+
+rule HideAllIPs:
+	// Match all nodes whose type is IPAddress
+	
+	**/[IPAddress] => encryptIP(ENCRYPTION_CONSTANT, 16)
 
 @(nl.cwi.anon.IPAddressEncrypter)	
 algorithm encryptIP(str key, int mask)
