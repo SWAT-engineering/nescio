@@ -1,9 +1,0 @@
-module First
-
-rule HideIP :
-	Person.name => toZeros
-
-@(nl.cwi.anon.ToZeros)	
-trafo toZeros
-
-
