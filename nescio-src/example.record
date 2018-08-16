@@ -1,0 +1,6 @@
+record Person [ int age str name ] 
+
+instance Person0 ofrecord Person
+[ age: 17 
+  name: "Pablo"
+]

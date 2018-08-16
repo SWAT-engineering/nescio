@@ -1,0 +1,14 @@
+module IP_anonymzation
+
+import TCP_IP using bird
+
+rule HideIPsrc:
+	IPPacket.head.srcAddress => ffx_IPaddress("30313233343536373839414243444546", 16)
+
+rule HideIPDst:
+	IPPacket.head.dstAddress => ffx_IPaddress("30313233343536373839414243444546", 16)
+
+@(nl.cwi.anon.FFXIPAddress)	
+algorithm ffx_IPaddress(str key, int mask)
+
+
