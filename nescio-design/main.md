@@ -17,10 +17,11 @@ Nescio is data format agnostic. It requires the data format to have graph or tre
 ## Architecture
 
 1. `nescio-core`: basis nescio syntax, type checker, and code generator
-3. `nescio-engine`: basic infrastructure that any data format that nescio connects too should support. Implementors can choose between Rascal and Java.
-2. `nescio-trans`: data transformation library that is used by `nescio-core`
+2. `nescio-engine`: basic infrastructure that any data format that nescio connects too should support. Implementors can choose between Rascal and Java.
+3. `nescio-trans`: data transformation library that is used by `nescio-core`
 
 ### Nescio core
+
 #### Syntax
 
 ```nescio
@@ -34,7 +35,7 @@ rule HideSrcIP:
     IPPacket/head/srcAddress => encryptFFX(KEY)
 
 rule HideDestIP:
-    IPPacket/head/dstAddress => encryptFFX(KEY)
+    IPPacket/head/dstAddress => replaceZeros()
 
 // The same two rules above can be replaced by a deep matching policy
 rule HideAllIPs:
@@ -63,12 +64,13 @@ module nescio::engine::API
 import util::Reflective;
 
 data Engine = format(
-    str name,
+    str formatIdentifier,
+    str formatName,
     StructuredGraph (str module, PathConfig cfg) calculateGraph,
     void(str name, StructuredGraph graph, Transformations transformations, PathConfig cfg) generateApplication)
 );
 
-alias Transformations = rel[str ruleName, Path, Action] transformations;
+alias Transformations = rel[str ruleName, Path, Action];
 
 data StructuredGraph
     = module(str name, rel[str typeName, str field, str fieldType] definedFields);
@@ -80,4 +82,63 @@ data Path
     | deepMatchType(str typeName)
     | deepMatchType(str typeName, Path child)
     ;
+
+data Action
+    = remove()
+    | replaceZeros()
+    | javaFunction(str className, str functionName)
+    ;
 ```
+
+```java
+package engineering.swat.nescio.action;
+
+/**
+ * Interface that all actions should implement (the `javaFunction` reference in the Rascal Action ADT)
+ */
+public interface TransformAction {
+    /**
+     * Does the transformation produce the same amount of bytes as the input
+     */
+    default boolean isInPlace() {
+        return false;
+    }
+
+    /**
+    * Given an inputSize, make a reasonable estimate for the output size, to help allocate buffers
+    */
+    int estimateOutputSize(int inputSize);
+
+    /**
+     * Perform an in-place transform of a ByteBuffer
+     * (should only be called if {@link #isInPlace()} returns true)
+     */
+    default void transform(ByteBuffer data) {
+        throw new IllegalArgumentException("This transformer does not support inplace transformations");
+    }
+
+    /**
+     * Transform all the data from the source stream and write the output to the target stream
+     *
+     * @returns the amount of bytes written to the target stream
+     */
+    int transform(InputStream source, OutputStream target);
+}
+```
+
+#### API Explained
+
+A nescio engine (for a certain data format) that is responsible for three parts:
+
+1. Provide a static structure of the data format (which fields under which nested name)
+2. Provide a code generator that translate the Path AST to a format specific search implementation, and correctly implements the `Action` ADT.
+3. 
+
+
+
+
+
+# TODO
+
+- sometimes, like for example for JSON, the intermediate nodes do not have a type name, there is only a structure on what is nested inside what. maybe the `StructuredGraph` data type should be more generic to also handle this.
+- how to encode arity of the structures in the graph
