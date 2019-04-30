@@ -3,9 +3,11 @@ module lang::nescio::Syntax
 extend lang::std::Layout;
 
 start syntax Program =
-	"module" Id
+	"module" ModuleId
 	Import* imports
 	Decl* declarations;
+	
+keyword Reserved = "import" | "from" | "rule" |  "=\>" | "**" | "algorithm" | "int" | "str" | "bool" | "true" | "false";
 	
 lexical JavaId 
 	= [a-z A-Z 0-9 _] !<< [a-z A-Z][a-z A-Z 0-9 _ .]* !>> [a-z A-Z 0-9 _]
@@ -15,15 +17,12 @@ lexical Id
 	=  (([a-z A-Z 0-9 _]) !<< ([a-z A-Z])[a-z A-Z 0-9 _]* !>> [a-z A-Z 0-9 _]) \ Reserved 
 	;
 
-lexical DId = Id | "_";
+lexical ModuleId
+    = {Id "::"}+ moduleName
+    ;
 
 syntax Import
-	= "import" Id "from" LangId
-	;
-
-	
-lexical LangId
-	= "bird"
+	= "import" ModuleId moduleId "from" Id langId
 	;
 	
 syntax Prog
@@ -33,10 +32,10 @@ syntax Prog
 syntax Decl
 	= Rule
 	| Trafo
-	| Constant
+	| ConstantDecl
 	;
 	
-syntax Constant
+syntax ConstantDecl
 	= Type Id "=" Expr;	
 	
 syntax Rule
@@ -72,11 +71,15 @@ syntax Type
 	
 syntax Expr 
 	= NatLiteral
+	| BoolLiteral
 	| HexIntegerLiteral
 	| BitLiteral
 	| StringLiteral
 	| Id
 	;	
+	
+	
+lexical BoolLiteral = "true" | "false";
 	
 lexical NatLiteral
 	=  @category="Constant" [0-9 _]+ !>> [0-9 _]
