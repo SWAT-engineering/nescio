@@ -1,6 +1,9 @@
 module Plugin
 
 import lang::nescio::Syntax;
+import lang::nescio::Checker;
+import lang::nescio::API;
+
 import lang::record::Syntax;
 import ParseTree;
 
@@ -17,14 +20,26 @@ Contribution commonSyntaxProperties
         lineComment = "//", 
         blockComment = <"/*","*","*/">
     );
+    
+Tree checkNescio(Tree input){
+    model = nescioTModelFromTree(input); // your function that collects & solves
+    types = getFacts(model);
+  
+  return input[@messages={*getMessages(model)}]
+              [@hyperlinks=getUseDef(model)]
+              [@docs=(l:"<prettyPrintAType(types[l])>" | l <- types)]
+         ; 
+}    
 
 void main() {
 	registerLanguage(LANG_NAME, "nescio", start[Program](str src, loc org) {
 		return parse(#start[Program], src, org);
  	});
-	
-	registerContributions(LANG_NAME, {
-        commonSyntaxProperties
+ 	
+ 	registerContributions(LANG_NAME, {
+        commonSyntaxProperties,
+        treeProperties(hasQuickFixes = false), // performance
+        annotator(checkNescio)
     });
 }
 
