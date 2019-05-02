@@ -2,8 +2,18 @@ module First
 
 import example from record
 
-rule HideIP :
-	Person/address/name => toZeros
+rule HideWorkAddress:
+	Person/workAddress/city/country => toZeros
+
+rule HideAllAddresses:
+	Person/[Address]/[City]/country => toZeros
 	
+rule HideAllAddresses2:
+	Person/[Address]/city/country => toZeros
+
+rule HideAllAdresses3:
+	Person/**/Address/number => toZeros
+
+
 @(nl.cwi.anon.ToZeros)	
 algorithm toZeros()
