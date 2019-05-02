@@ -45,16 +45,18 @@ str prettyPrintAType(strType()) = "str";
 str prettyPrintAType(boolType()) = "bool";    
     
 Path toADT(current: (Pattern) `<Id id>`)
-	= field("<id>");
+	= rootType("<id>");
  
-Path toADT(current: (Pattern) `<Id id> / <Pattern p>`)
-	= rootType("<id>", toADT(p));
+Path toADT(current: (Pattern) `<Pattern p> / <Id id>`)
+	= field(toADT(p), "<id>");
+	
+Path toADT(current: (Pattern) `<Pattern p> / [<Id id>]`)
+	= fieldType(toADT(p), "<id>");	
+	
+Path toADT(current: (Pattern) `<Pattern p> / ** / <Id id>`)
+	= deepMatchType(toADT(p), "<id>");		
 
-Path toADT(current: (Pattern) `[ <Id id> ]`) {
-	throw "Operation not yet implemented";
-}
-
-Path toADT(current: (Pattern) `** / <Pattern p>`){
+Path toADT(Pattern p){
 	throw "Operation not yet implemented";
 }
 
@@ -101,6 +103,7 @@ void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collect
 
 void collect(current: Pattern p, Collector c) {
 	Path path = toADT(p);
+	println(path);
 	if (StructuredGraph graph := (c.getStack(__NESCIO_GRAPHS_QUEUE))[0] && !isValidPath(path, graph.definedFields)) {
 		c.report(error(current, "Path is not valid"));
 	}
