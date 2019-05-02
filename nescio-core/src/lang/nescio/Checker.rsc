@@ -90,8 +90,7 @@ PathConfig pathConfig(loc file) {
 // 1) admit importing modules from different languages? NOT
 // 2) admit importing more than one module per language? 
 void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collector c) {
-	 LanguagesConf langs = c.getStack(__NESCIO_SUPPORTED_LANGS)[0];
-	 if ("<langId>" in langs) {
+	 if (LanguagesConf langs := c.getStack(__NESCIO_SUPPORTED_LANGS)[0] && "<langId>" in langs) {
 	 	GraphCalculator gc = langs["<langId>"];
 	 	StructuredGraph graph = gc("<name>", pathConfig(current@\loc));
 	 	c.push(__NESCIO_GRAPHS_QUEUE, graph);
@@ -102,15 +101,14 @@ void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collect
 
 void collect(current: Pattern p, Collector c) {
 	Path path = toADT(p);
-	StructuredGraph graph = (c.getStack(__BIRD_IMPORT_QUEUE))[0];
-	if (!isValidPath(path, graph.definedFields)) {
+	if (StructuredGraph graph := (c.getStack(__NESCIO_GRAPHS_QUEUE))[0] && !isValidPath(path, graph.definedFields)) {
 		c.report(error(current, "Path is not valid"));
 	}
 }
 
 void collect(current: (Decl) `rule <Id id> : <Pattern pattern> =\> <Id trId> <Args? args>`, Collector c){
  	c.define("<id>", ruleId(), current, defType(ruleType("<id>")));
-	// collect(pattern, c);
+	collect(pattern, c);
 	c.use(trId, {trafoId()});
 	for (aargs <- args, e <- aargs.args) {
 		collect(e, c);
@@ -208,12 +206,10 @@ void collect(current: (Expr) `<NatLiteral nat>`, Collector c){
 // ----  Examples & Tests --------------------------------
 alias LanguagesConf = map[str langId, GraphCalculator gc];
 
-TModel nescioTModelFromTree(Tree pt, LanguagesConf langConf = (), bool debug = false){
+TModel nescioTModelFromTree(Tree pt, LanguagesConf langsConfig = (), bool debug = false){
     if (pt has top) pt = pt.top;
     c = newCollector("collectAndSolve", pt, config=getNescioConfig());    // TODO get more meaningfull name
-    for (langId <- langConf) {
-    	c.push(__NESCIO_SUPPORTED_LANGS, langConf);
-    }
+   	c.push(__NESCIO_SUPPORTED_LANGS, langsConfig);
     collect(pt, c);
     return newSolver(pt, c.run()).run();
 }

@@ -1,9 +1,9 @@
 module First
 
-rule HideIP :
-	Person.name => toZeros
+import example from record
 
+rule HideIP :
+	Person/address/name => toZeros
+	
 @(nl.cwi.anon.ToZeros)	
 algorithm toZeros()
-
-

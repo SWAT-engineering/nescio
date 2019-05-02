@@ -1,6 +1,6 @@
-module IP_anonymzation
+module IP_anonymzation2
 
-import TCP_IP_with_structured_IPs from bird
+// import TCP_IP_with_structured_IPs from bird
 
 str ENCRYPTION_CONSTANT = "30313233343536373839414243444546" 
 
@@ -18,7 +18,5 @@ rule HideAllIPs:
 	
 	**/[IPAddress] => encryptIP(ENCRYPTION_CONSTANT, 16)
 
-@(nl.cwi.anon.IPAddressEncrypter)	
+@(nl.cwi.anon.IPAddressEncrypter)
 algorithm encryptIP(str key, int mask)
-
-

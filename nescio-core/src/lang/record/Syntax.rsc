@@ -2,8 +2,10 @@ module lang::record::Syntax
 
 extend lang::std::Layout;
 
+// TODO check what happens with example-record.nescio if we add "record" here, since that coincides with the name
+// of the language being imported
+keyword Reserved = "instance" | "int" | "str" ;
 
-keyword Reserved = "record" | "instance" | "int" | "str" ;
 start syntax Records =
 	Record* record
 	Instance* instances;
@@ -33,6 +35,7 @@ syntax FieldAssignment = Id ":" Expr;
 syntax Type
 	= "int"
 	| "str"
+	| Id
 	;
 	
 syntax Expr 
