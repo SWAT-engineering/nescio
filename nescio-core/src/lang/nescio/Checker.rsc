@@ -79,31 +79,44 @@ private loc project(loc file) {
    return |project://<file.authority>|;
 }
 
-private str __NESCIO_SUPPORTED_LANGS = "__nescioSupportedLangs";
 private str __NESCIO_GRAPHS_QUEUE = "__nescioGraphsQueue";
+private str __NESCIO_USED_LANGUAGE = "__nescioUsedLanguage";
 
 PathConfig pathConfig(loc file) {
    assert file.scheme == "project";
    p = project(file);      
    return pathConfig(srcs = [ p + "nescio-src"]);
 }
+
  
 // TODO shall we:
 // 1) admit importing modules from different languages? NOT
 // 2) admit importing more than one module per language? 
 void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collector c) {
-	 if (LanguagesConf langs := c.getStack(__NESCIO_SUPPORTED_LANGS)[0] && "<langId>" in langs) {
+	 LanguagesConf langs = c.getConfig().langsConfig;
+	 if ("<langId>" in langs) {
 	 	GraphCalculator gc = langs["<langId>"];
-	 	StructuredGraph graph = gc("<name>", pathConfig(current@\loc));
-	 	c.push(__NESCIO_GRAPHS_QUEUE, graph);
+	 	try {
+	 		StructuredGraph graph = gc("<name>", pathConfig(current@\loc));
+	 		c.push(__NESCIO_GRAPHS_QUEUE, graph);
+		 	if ([] !:= c.getStack(__NESCIO_USED_LANGUAGE)){
+		 		if (str usedLang := c.top(__NESCIO_USED_LANGUAGE), "<langId>" !:= usedLang) 
+	 				c.report(error(current, "All imports in this module need to be of the first imported language %v", "<langId>"));
+		 	}
+		 	else 
+		 		c.push(__NESCIO_USED_LANGUAGE, "<langId>");
+	 	}
+	 	catch IO(msg):{
+	 		c.report(error(current, "Module %v not found", "<name>"));
+	 	};
 	 }
 	 else
-	 	c.report(error(current, "There is not a registered graph calculator for language %v", langId));
+	 	c.report(error(current, "There is not a registered graph calculator for language %v", "<langId>"));
 }
 
 void collect(current: Pattern p, Collector c) {
 	Path path = toADT(p);
-	println(path);
+	//println(path);
 	if (StructuredGraph graph := (c.getStack(__NESCIO_GRAPHS_QUEUE))[0] && !isValidPath(path, graph.definedFields)) {
 		c.report(error(current, "Path is not valid"));
 	}
@@ -209,15 +222,20 @@ void collect(current: (Expr) `<NatLiteral nat>`, Collector c){
 // ----  Examples & Tests --------------------------------
 alias LanguagesConf = map[str langId, GraphCalculator gc];
 
+data TypePalConfig(
+    LanguagesConf langsConfig = ()
+);
+
+
 TModel nescioTModelFromTree(Tree pt, LanguagesConf langsConfig = (), bool debug = false){
     if (pt has top) pt = pt.top;
-    c = newCollector("collectAndSolve", pt, config=getNescioConfig());    // TODO get more meaningfull name
-   	c.push(__NESCIO_SUPPORTED_LANGS, langsConfig);
-    collect(pt, c);
+    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig));    // TODO get more meaningfull name
+   	collect(pt, c);
     return newSolver(pt, c.run()).run();
 }
 
-private TypePalConfig getNescioConfig() = tconfig(
+private TypePalConfig getNescioConfig(LanguagesConf langsConfig) = tconfig(
+	langsConfig = langsConfig
     //getTypeNamesAndRole = birdGetTypeNameAndRole,
     //getTypeInNamelessType = birdGetTypeInAnonymousStruct,
 );
