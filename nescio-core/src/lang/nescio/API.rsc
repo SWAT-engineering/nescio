@@ -2,11 +2,9 @@ module lang::nescio::API
 
 import Relation;
 
-alias Fields = rel[str typeName, str field, str fieldType];
+alias StructuredGraph = rel[str typeName, str field, str fieldType];
 
 alias Types = set[str typeName];
-
-data StructuredGraph = graph(str name, Fields definedFields);
 
 data PathConfig = pathConfig(list[loc] srcs = []);
 
@@ -19,20 +17,20 @@ data Path
     | deepMatchType(Path src, str typeName)
     ;
 
-Types getTypes(field(Path src, str fieldName), Fields fields)
+Types getTypes(field(Path src, str fieldName), StructuredGraph fields)
 	= {fieldType | <typeName, fieldName, fieldType> <- fields, typeName in getTypes(src, fields)}; 
 
-Types getTypes(fieldType(Path src, str fieldType), Fields fields)
+Types getTypes(fieldType(Path src, str fieldType), StructuredGraph fields)
 	= {fieldType | <typeName, _, fieldType> <- fields, typeName in getTypes(src, fields)}; 
 
-Types getTypes(deepMatchType(Path src, str typeName), Fields fields)
+Types getTypes(deepMatchType(Path src, str typeName), StructuredGraph fields)
 	= typeName in range(graph+) ? {typeName} : {}  
 	when graph := {<tn, fieldType> | <tn, _, fieldType> <- fields}; 
 		
-Types getTypes(rootType(typeName), Fields fields)
+Types getTypes(rootType(typeName), StructuredGraph fields)
 	= {typeName | <typeName, _, _> <- fields};
 		
-bool isValidPath(Path p, Fields fields) =
+bool isValidPath(Path p, StructuredGraph fields) =
 	_ <- [t | t <- types, t in leaves] 
 	when leaves := {fieldType | row:<_, _, fieldType> <- fields, fieldType notin domain(fields)},
 		 types := getTypes(p, fields); 
