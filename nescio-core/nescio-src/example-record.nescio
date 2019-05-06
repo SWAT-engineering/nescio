@@ -2,6 +2,8 @@ module First
 
 import example from record
 
+str ENCRYPTION_CONSTANT = "30313233343536373839414243444546" 
+
 rule HideAge:
 	Person/age => toZeros
 
@@ -23,3 +25,6 @@ rule HideAllAdresses3:
 
 @(nl.cwi.anon.ToZeros)	
 algorithm toZeros()
+
+@(nl.cwi.anon.IPAddressEncrypter)
+algorithm encryptIP(str key, int mask)
