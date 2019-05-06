@@ -1,6 +1,5 @@
 Manifest-Version: 0.0.1
 Main-Function: main
 Courses: courses
-Main-Module: Plugin
-Source: src
-
+Source: src, nescio-src
+Target: |project://mtl-generated-target/src/|

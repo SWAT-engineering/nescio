@@ -7,6 +7,9 @@ import ListRelation;
 import Set;
 import String;
 
+import util::Reflective;
+
+
 extend analysis::typepal::TypePal;
 extend analysis::typepal::TestFramework;
 
@@ -91,22 +94,16 @@ private str __NESCIO_GRAPHS_QUEUE = "__nescioGraphsQueue";
 private str __AGGREGATED_GRAPH = "__nescioAggregatedGraph";
 private str __NESCIO_USED_LANGUAGE = "__nescioUsedLanguage";
 
-PathConfig pathConfig(loc file) {
-   assert file.scheme == "project";
-   p = project(file);      
-   return pathConfig(srcs = [ p + "nescio-src"]);
-}
-
- 
 // TODO shall we:
 // 1) admit importing modules from different languages? NOT
 // 2) admit importing more than one module per language? 
 void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collector c) {
 	 LanguagesConf langs = c.getConfig().langsConfig;
+	 PathConfig pathConf = c.getConfig().pathConfig;
 	 if ("<langId>" in langs) {
 	 	GraphCalculator gc = langs["<langId>"];
 	 	try {
-	 		StructuredGraph graph = gc("<name>", pathConfig(current@\loc));
+	 		StructuredGraph graph = gc("<name>", pathConf);
 	 		c.push(__NESCIO_GRAPHS_QUEUE, graph);
 		 	if ([] !:= c.getStack(__NESCIO_USED_LANGUAGE)){
 		 		if (str usedLang := c.top(__NESCIO_USED_LANGUAGE), "<langId>" !:= usedLang) 
@@ -232,19 +229,21 @@ void collect(current: (Expr) `<NatLiteral nat>`, Collector c){
 alias LanguagesConf = map[str langId, GraphCalculator gc];
 
 data TypePalConfig(
-    LanguagesConf langsConfig = ()
+    LanguagesConf langsConfig = (),
+    PathConfig pathConfig = pathConfig()
 );
 
 
-TModel nescioTModelFromTree(Tree pt, LanguagesConf langsConfig = (), bool debug = false){
+TModel nescioTModelFromTree(Tree pt, PathConfig pcfg, LanguagesConf langsConfig = (), bool debug = false){
     if (pt has top) pt = pt.top;
-    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig));    // TODO get more meaningfull name
+    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig, pcfg));    // TODO get more meaningfull name
    	collect(pt, c);
     return newSolver(pt, c.run()).run();
 }
 
-private TypePalConfig getNescioConfig(LanguagesConf langsConfig) = tconfig(
-	langsConfig = langsConfig
+private TypePalConfig getNescioConfig(LanguagesConf langsConfig, PathConfig pathConf) = tconfig(
+	langsConfig = langsConfig,
+	pathConfig = pathConf
     //getTypeNamesAndRole = birdGetTypeNameAndRole,
     //getTypeInNamelessType = birdGetTypeInAnonymousStruct,
 );

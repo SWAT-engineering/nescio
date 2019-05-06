@@ -10,8 +10,51 @@ import ParseTree;
 import IO;
 import util::IDE;
 
+import util::Reflective;
+import lang::manifest::IO;
 
 public str NESCIO_LANG_NAME = "nescio";
+
+data NescioManifest 
+ = nescioManifest(
+      list[str] Source = ["src"],
+      str Target = "generated"
+   );
+ 
+private loc configFile(loc file) =  project(file) + "META-INF" + "RASCAL.MF"; 
+
+private loc project(loc file) {
+   assert file.scheme == "project";
+   return |project:///|[authority = file.authority];
+}
+
+
+PathConfig getDefaultPathConfig() = pathConfig(srcs = [], defs = []);
+
+PathConfig config(loc file) {
+   assert file.scheme == "project";
+
+   p = project(file);
+   cfgFile = configFile(file);
+   mf = readManifest(#NescioManifest, cfgFile); 
+   
+   cfg = getDefaultPathConfig();
+   
+   cfg.srcs += [ p + s | s <- mf.Source] ;
+   
+   //TODO why this doesnt work
+   
+   /*if (/^\|/ := mf.Target) {
+      cfg.target = readTextValueString(#loc, mf.Target);
+   }
+   else {
+      cfg.target = p + mf.Target;
+   }
+   */
+   
+   return cfg;
+}
+
 
 public Contribution commonSyntaxProperties 
     = syntaxProperties(
@@ -31,7 +74,8 @@ Tree checkNescio(Tree input){
 }
 
 Tree(Tree) checkNescio(map[str, GraphCalculator] langs) = Tree(Tree input){
-    model = nescioTModelFromTree(input, langsConfig = langs); // your function that collects & solves
+	pcfg = config(input@\loc);
+    model = nescioTModelFromTree(input, pcfg, langsConfig = langs); // your function that collects & solves
     types = getFacts(model);
   
   return input[@messages={*getMessages(model)}]
@@ -48,6 +92,6 @@ void main() {
  	registerContributions(NESCIO_LANG_NAME, {
         commonSyntaxProperties,
         treeProperties(hasQuickFixes = false), // performance
-        annotator(checkNescio)
+        annotator(checkNescio(()))
     });
 }

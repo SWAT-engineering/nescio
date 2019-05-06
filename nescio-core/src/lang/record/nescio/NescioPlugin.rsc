@@ -2,15 +2,17 @@ module lang::record::nescio::NescioPlugin
 
 import lang::record::Syntax;
 import lang::nescio::API;
+import util::Reflective;
 
 import ParseTree;
 
-StructuredGraph recordGraphCalculator(str moduleName, PathConfig cfg) {
- 	Tree pt = sampleRecord(moduleName);
+StructuredGraph recordGraphCalculator(str moduleName, PathConfig pcfg) {
+ 	Tree pt = sampleRecord(moduleName, pcfg);
     return calculateFields(pt.top);
  }
   
-public start[Records] sampleRecord(str name) = parse(#start[Records], |project://nescio/nescio-src/<name>.record|);
+public start[Records] sampleRecord(str name, PathConfig pcfg) = parse(#start[Records],  getModuleLocation(name, pcfg, extension = "record"));
+
 
 //alias Fields = rel[str typeName, str field, str fieldType];
 StructuredGraph calculateFields((Records) `<Record* records>`)  
