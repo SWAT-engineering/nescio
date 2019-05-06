@@ -26,8 +26,8 @@ Types getTypes(fieldType(Path src, str fieldType), Fields fields)
 	= {fieldType | <typeName, _, fieldType> <- fields, typeName in getTypes(src, fields)}; 
 
 Types getTypes(deepMatchType(Path src, str typeName), Fields fields)
-	= typeName in range(graph*) ? {typeName} : {}  
-	when graph := {<typeName, fieldType> | <typeName, _, fieldType> <- fields};
+	= typeName in range(graph+) ? {typeName} : {}  
+	when graph := {<tn, fieldType> | <tn, _, fieldType> <- fields}; 
 		
 Types getTypes(rootType(typeName), Fields fields)
 	= {typeName | <typeName, _, _> <- fields};
