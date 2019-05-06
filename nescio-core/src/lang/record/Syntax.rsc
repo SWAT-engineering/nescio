@@ -4,11 +4,10 @@ extend lang::std::Layout;
 
 // TODO check what happens with example-record.nescio if we add "record" here, since that coincides with the name
 // of the language being imported
-keyword Reserved = "instance" | "int" | "str" ;
+keyword Reserved =  "int" | "str" ;
 
 start syntax Records =
-	Record* record
-	Instance* instances;
+	Record* record;
 	
 lexical Id 
 	=  (([a-z A-Z 0-9 _]) !<< ([a-z A-Z])[a-z A-Z 0-9 _]* !>> [a-z A-Z 0-9 _]) \ Reserved 
@@ -25,12 +24,6 @@ syntax Record
 syntax Field
 	= Type Id
 	;	
-	
-syntax Instance = "instance" Id "ofrecord" Id "["
-	FieldAssignment*
-"]";
-
-syntax FieldAssignment = Id ":" Expr;
 
 syntax Type
 	= "int"
@@ -38,28 +31,3 @@ syntax Type
 	| Id
 	;
 	
-syntax Expr 
-	= NatLiteral
-	| StringLiteral
-	;	
-	
-lexical NatLiteral
-	=  @category="Constant" [0-9 _]+ !>> [0-9 _]
-	;
-
-lexical StringLiteral
-	= @category="Constant" "\"" StringCharacter* chars "\"" ;	
-	
-lexical StringCharacter
-	= "\\" [\" \\ b f n r t] 
-	| ![\" \\]+ >> [\" \\]
-	| UnicodeEscape 
-	;
-	
-lexical UnicodeEscape
-	= utf16: "\\" [u] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] 
-	| utf32: "\\" [U] (("0" [0-9 A-F a-f]) | "10") [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] [0-9 A-F a-f] // 24 bits 
-	| ascii: "\\" [a] [0-7] [0-9A-Fa-f]
-	;
-
-
