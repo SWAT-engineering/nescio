@@ -67,6 +67,11 @@ void collect(current: (Program) `module <ModuleId moduleName> <Import* imports> 
  	c.define("<moduleName>", moduleId(), current, defType(moduleType()));
     c.enterScope(current);
     collect(imports, c);
+    if ([] !:= c.getStack(__NESCIO_GRAPHS_QUEUE)) {
+    	if (list[StructuredGraph] graphs := c.getStack(__NESCIO_GRAPHS_QUEUE)) {
+    		c.push(__AGGREGATED_GRAPH, ({} | it + g | g <- graphs));
+    	}
+    }
     currentScope = c.getScope();
     	collect(decls, c);
     c.leaveScope(current);
@@ -80,6 +85,7 @@ private loc project(loc file) {
 }
 
 private str __NESCIO_GRAPHS_QUEUE = "__nescioGraphsQueue";
+private str __AGGREGATED_GRAPH = "__nescioAggregatedGraph";
 private str __NESCIO_USED_LANGUAGE = "__nescioUsedLanguage";
 
 PathConfig pathConfig(loc file) {
@@ -117,7 +123,7 @@ void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collect
 void collect(current: Pattern p, Collector c) {
 	Path path = toADT(p);
 	//println(path);
-	if (StructuredGraph graph := (c.getStack(__NESCIO_GRAPHS_QUEUE))[0] && !isValidPath(path, graph.definedFields)) {
+	if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH) && !isValidPath(path, graph)) {
 		c.report(error(current, "Path is not valid"));
 	}
 }
