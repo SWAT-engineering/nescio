@@ -3,8 +3,3 @@ record Person [ int age str name Address homeAddress Address workAddress]
 record Address [ str name int number City city]
 
 record City [ str name str country]
-
-instance Person0 ofrecord Person
-[ age: 17 
-  name: "Pablo"
-]

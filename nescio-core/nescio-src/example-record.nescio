@@ -2,8 +2,14 @@ module First
 
 import example from record
 
-rule HideWorkAddress:
-	Person/workAddress/city/country => toZeros
+rule HideAge:
+	Person/age => toZeros
+
+rule HideName:
+	Person/name => toZeros
+
+rule HideCityNameWorkAddress:
+	Person/workAddress/city/name => toZeros
 
 rule HideAllAddresses:
 	Person/[Address]/[City]/country => toZeros
