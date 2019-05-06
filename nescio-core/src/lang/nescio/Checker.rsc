@@ -44,17 +44,20 @@ str prettyPrintAType(intType()) = "int";
 str prettyPrintAType(strType()) = "str";
 str prettyPrintAType(boolType()) = "bool";    
     
-Path toADT(current: (Pattern) `<Id id>`)
-	= rootType("<id>");
+TypeName toTypeName((ModuleId) `<{Id "::"}+ moduleName>`) = typeName(lst[0..-1], lst[-1])
+	when lst := ["<id>" | id <- moduleName];
+    
+Path toADT(current: (Pattern) `<ModuleId id>`)
+	= rootType(toTypeName(id));
  
 Path toADT(current: (Pattern) `<Pattern p> / <Id id>`)
 	= field(toADT(p), "<id>");
 	
-Path toADT(current: (Pattern) `<Pattern p> / [<Id id>]`)
-	= fieldType(toADT(p), "<id>");	
+Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`)
+	= fieldType(toADT(p), toTypeName(id));	
 	
-Path toADT(current: (Pattern) `<Pattern p> / ** / <Id id>`)
-	= deepMatchType(toADT(p), "<id>");		
+Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`)
+	= deepMatchType(toADT(p), toTypeName(id));		
 
 Path toADT(Pattern p){
 	throw "Operation not yet implemented";

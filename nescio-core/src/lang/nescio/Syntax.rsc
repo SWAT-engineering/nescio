@@ -43,10 +43,10 @@ syntax Rule
 	;	
 
 syntax Pattern
-	= Id
+	= ModuleId
 	| Pattern "\a2F" Id
-	| Pattern "\a2F" "[" Id "]"
-	| Pattern "\a2F" "**" "\a2F"  Id
+	| Pattern "\a2F" "[" ModuleId "]"
+	| Pattern "\a2F" "**" "\a2F"  ModuleId
 	;
 	
 syntax Trafo
