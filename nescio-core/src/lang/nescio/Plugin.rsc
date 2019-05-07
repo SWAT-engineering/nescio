@@ -42,15 +42,12 @@ PathConfig config(loc file) {
    
    cfg.srcs += [ p + s | s <- mf.Source] ;
    
-   //TODO why this doesnt work
-   
-   /*if (/^\|/ := mf.Target) {
+   if (/^\|/ := mf.Target) {
       cfg.target = readTextValueString(#loc, mf.Target);
    }
    else {
       cfg.target = p + mf.Target;
    }
-   */
    
    return cfg;
 }

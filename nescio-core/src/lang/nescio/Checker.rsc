@@ -85,6 +85,8 @@ void collect(current: (Program) `module <ModuleId moduleName> <Import* imports> 
 
 // ---- Modules and imports
 
+data PathConfig(loc target = |cwd:///|);
+
 private loc project(loc file) {
    assert file.scheme == "project";
    return |project://<file.authority>|;
