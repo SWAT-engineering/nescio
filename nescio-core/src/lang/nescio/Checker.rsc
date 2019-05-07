@@ -94,9 +94,6 @@ private str __NESCIO_GRAPHS_QUEUE = "__nescioGraphsQueue";
 private str __AGGREGATED_GRAPH = "__nescioAggregatedGraph";
 private str __NESCIO_USED_LANGUAGE = "__nescioUsedLanguage";
 
-// TODO shall we:
-// 1) admit importing modules from different languages? NOT
-// 2) admit importing more than one module per language? 
 void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collector c) {
 	 LanguagesConf langs = c.getConfig().langsConfig;
 	 PathConfig pathConf = c.getConfig().pathConfig;
@@ -236,7 +233,7 @@ data TypePalConfig(
 
 TModel nescioTModelFromTree(Tree pt, PathConfig pcfg, LanguagesConf langsConfig = (), bool debug = false){
     if (pt has top) pt = pt.top;
-    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig, pcfg));    // TODO get more meaningfull name
+    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig, pcfg));
    	collect(pt, c);
     return newSolver(pt, c.run()).run();
 }
