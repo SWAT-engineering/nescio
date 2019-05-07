@@ -1,4 +1,4 @@
-module lang::record::nescio::InstanceProcessor
+module lang::record::nescio::PersonInstanceProcessor
 
 import IO;
 
