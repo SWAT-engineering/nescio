@@ -18,6 +18,9 @@ data Path
     | fieldType(Path src, TypeName typeName)
     | deepMatchType(Path src, TypeName typeName)
     ;
+    
+data NamedPattern
+	=  pattern(str name, Path path);
 
 Types getTypes(field(Path src, str fieldName), StructuredGraph fields)
 	= {fieldType | <typeName, fieldName, fieldType> <- fields, typeName in getTypes(src, fields)}; 
