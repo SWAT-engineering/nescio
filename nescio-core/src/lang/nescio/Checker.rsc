@@ -50,26 +50,26 @@ str prettyPrintAType(boolType()) = "bool";
 TypeName toTypeName((ModuleId) `<{Id "::"}+ moduleName>`) = typeName(lst[0..-1], lst[-1])
 	when lst := ["<id>" | id <- moduleName];
     
-Path toADT(current: (Pattern) `<ModuleId id>`)
-	= rootType(toTypeName(id));
+Path toADT(current: (Pattern) `<ModuleId id>`, StructuredGraph g)
+	= resolvePath(rootType(toTypeName(id)), g);
  
-Path toADT(current: (Pattern) `<Pattern p> / <Id id>`)
-	= field(toADT(p), "<id>");
+Path toADT(current: (Pattern) `<Pattern p> / <Id id>`, StructuredGraph g)
+	= resolvePath(field(toADT(p, g), "<id>"), g);
 	
-Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`)
-	= fieldType(toADT(p), toTypeName(id));	
+Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`, StructuredGraph g)
+	= resolvePath(fieldType(toADT(p, g), toTypeName(id)), g);	
 	
-Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`)
-	= deepMatchType(toADT(p), toTypeName(id));		
+Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`, StructuredGraph g)
+	= resolvePath(deepMatchType(toADT(p, g), toTypeName(id)), g);		
 
-Path toADT(Pattern p){
+Path toADT(Pattern p, StructuredGraph g){
 	throw "Operation not yet implemented";
 }
 
 // ----  Collect definitions, uses and requirements -----------------------
 
 
-void collect(current: (Program) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`, Collector c){
+void collect(current: (Specification) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`, Collector c){
  	c.define("<moduleName>", moduleId(), current, defType(moduleType()));
     c.enterScope(current);
     collect(imports, c);
@@ -77,7 +77,11 @@ void collect(current: (Program) `module <ModuleId moduleName> <Import* imports> 
     	if (list[StructuredGraph] graphs := c.getStack(__NESCIO_GRAPHS_QUEUE)) {
     		c.push(__AGGREGATED_GRAPH, ({} | it + g | g <- graphs));
     	}
+    	else
+    		c.push(__AGGREGATED_GRAPH, {});
     }
+    else
+    	c.push(__AGGREGATED_GRAPH, {});
     currentScope = c.getScope();
     	collect(decls, c);
     c.leaveScope(current);
@@ -120,11 +124,14 @@ void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collect
 }
 
 void collect(current: Pattern p, Collector c) {
-	Path path = toADT(p);
 	//println(path);
-	if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH) && !isValidPath(path, graph)) {
-		c.report(error(current, "Path is not valid"));
+	if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
+		Path path = toADT(p, graph);
+		if (!isValidPath(path, graph)) 
+			c.report(error(current, "Path is not valid"));
 	}
+	else
+		c.report(error(current, "Cannot check path since there is not a registered graph calculator"));
 }
 
 void collect(current: (Decl) `rule <Id id> : <Pattern pattern> =\> <Id trId> <Args? args>`, Collector c){
@@ -248,7 +255,7 @@ private TypePalConfig getNescioConfig(LanguagesConf langsConfig, PathConfig path
 );
 
 
-public start[Program] sampleNescio(str name) = parse(#start[Program], |project://nescio/nescio-src/<name>.nescio|);
+public start[Specification] sampleNescio(str name) = parse(#start[Specification], |project://nescio/nescio-src/<name>.nescio|);
 
 list[Message] runNescio(str name, bool debug = false) {
     Tree pt = sampleNescio(name);
