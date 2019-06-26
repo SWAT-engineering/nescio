@@ -2,7 +2,7 @@ module lang::nescio::Syntax
 
 extend lang::std::Layout;
 
-start syntax Program =
+start syntax Specification =
 	"module" ModuleId
 	Import* imports
 	Decl* declarations;
