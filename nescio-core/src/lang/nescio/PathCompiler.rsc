@@ -5,6 +5,7 @@ import Set;
 import String;
 import Map;
 import IO;
+import ParseTree;
 
 import analysis::graphs::Graph;
 
@@ -20,30 +21,30 @@ alias RuleSpec = tuple[Path path, TransformationDescriptor trafo];
 
 alias Rules = map[str ruleName, RuleSpec rule];
 
-tuple[JavaType, str] evalExpr((Expr) `<NatLiteral lit>`, TModel model, map[Id, ConstantDecl] constants)
+tuple[JavaType, str] evalExpr((Expr) `<NatLiteral lit>`, map[Id, ConstantDecl] constants)
 	= <javaIntType(), "<lit>">;
 
-tuple[JavaType, str] evalExpr((Expr) `<BoolLiteral lit>`, TModel model, map[Id, ConstantDecl] constants)
+tuple[JavaType, str] evalExpr((Expr) `<BoolLiteral lit>`, map[Id, ConstantDecl] constants)
 	= <javaBooleanType(), "<lit>">;
 	
-tuple[JavaType, str] evalExpr((Expr) `<HexIntegerLiteral lit>`, TModel model, map[Id, ConstantDecl] constants)
+tuple[JavaType, str] evalExpr((Expr) `<HexIntegerLiteral lit>`, map[Id, ConstantDecl] constants)
 	= <javaIntType(), "<lit>">;	 
 	
-tuple[JavaType, str] evalExpr((Expr) `<BitLiteral lit>`, TModel model, map[Id, ConstantDecl] constants)
+tuple[JavaType, str] evalExpr((Expr) `<BitLiteral lit>`, map[Id, ConstantDecl] constants)
 	= <javaIntType(), "<lit>">;	 
 	
-tuple[JavaType, str] evalExpr((Expr) `<StringLiteral lit>`, TModel model, map[Id, ConstantDecl] constants)
+tuple[JavaType, str] evalExpr((Expr) `<StringLiteral lit>`, map[Id, ConstantDecl] constants)
 	= <javaStringType(), "<lit>">;	 	
 
-tuple[JavaType, str] evalExpr((Expr) `<Id id>`, TModel model, map[Id, ConstantDecl] constants)
-	= evalExpr(e, model, constants)
+tuple[JavaType, str] evalExpr((Expr) `<Id id>`, map[Id, ConstantDecl] constants)
+	= evalExpr(e, constants)
 	when (ConstantDecl) `<Type ty> <Id id> = <Expr e>` := constants[id];
 
 str getModuleName(current: (Specification) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`)
 //	= ["<part>" | part <- moduleName.moduleName][-1];
 	= "<moduleName>";
 	
-Rules evalNescio(current: (Specification) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`, TModel model, StructuredGraph graph){
+Rules evalNescio(current: (Specification) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`, StructuredGraph graph){
 	Rules rules = ();
 	
 	map[Id, ConstantDecl] constantDecls = (() | it + (id : cd) | (Decl) `<ConstantDecl cd>` <- decls, (ConstantDecl) `<Type ty> <Id id> = <Expr e>` := cd);
@@ -57,7 +58,7 @@ Rules evalNescio(current: (Specification) `module <ModuleId moduleName> <Import*
 	map[Id, str] javaClasses = ();
 	
 	for ((ConstantDecl) `<Type ty> <Id id> = <Expr e>` <- orderedConstants) {
-		tuple[JavaType, str] constantVal = evalExpr(e, model, constantDecls);
+		tuple[JavaType, str] constantVal = evalExpr(e, constantDecls);
 		constants = constants + (id : constantVal);
 	}
 	
@@ -67,7 +68,7 @@ Rules evalNescio(current: (Specification) `module <ModuleId moduleName> <Import*
  	
  	for ((Decl) `rule <Id ruleName> : <Pattern p> =\> <Id algo> <Args? args>` <- decls) {
  		try {
- 			rules = rules + ("<ruleName>" : <toADT(p, graph), <javaClasses[algo], [evalExpr(e, model, constants) |aargs <- args, e <- aargs.args]>>);
+ 			rules = rules + ("<ruleName>" : <toADT(p, graph), <javaClasses[algo], [evalExpr(e, constants) |aargs <- args, e <- aargs.args]>>);
  		}
  		catch _:{
  		};
@@ -78,12 +79,13 @@ Rules evalNescio(current: (Specification) `module <ModuleId moduleName> <Import*
 
 PathConfig getDefaultPathConfig() = pathConfig(srcs = [], defs = []);
 
-Rules evalNescio(loc nescioFile, str lang, GraphCalculator gc) {
-	start[Specification] nescioSpec = parse(#start[Specification], nescioFile);
-	PathConfig pcfg = getDefaultPathConfig();
-	TModel nescioModel = nescioTModelFromTree(nescioSpec, pcfg, langsConfig = (lang:gc));
-	StructuredGraph g = gc(getModuleName(nescioSpec.top), pcfg);
-	if (getMessages(nescioModel) != [])
-  		throw "Problems checking nescio file";
-  	return evalNescio(nescioSpec.top, nescioModel, g);
+start[Specification] parseNescio(loc nescioSpec) = parse(#start[Specification], nescioSpec);
+
+Rules evalNescio(start[Specification] nescioSpec, StructuredGraph graph) {
+	return evalNescio(nescioSpec.top, graph);
 }
+
+Rules evalNescio(loc nescioSpec, StructuredGraph graph) {
+	return evalNescio(parseNescio(nescioSpec), graph);
+}
+

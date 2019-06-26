@@ -45,26 +45,7 @@ str prettyPrintAType(trafoType(id, formals)) = "trafoType <id>";
 str prettyPrintAType(boolType()) = "bool";    
 str prettyPrintAType(intType()) = "int";
 str prettyPrintAType(strType()) = "str";
-str prettyPrintAType(boolType()) = "bool";    
-    
-TypeName toTypeName((ModuleId) `<{Id "::"}+ moduleName>`) = typeName(lst[0..-1], lst[-1])
-	when lst := ["<id>" | id <- moduleName];
-    
-Path toADT(current: (Pattern) `<ModuleId id>`, StructuredGraph g)
-	= resolvePath(rootType(toTypeName(id)), g);
- 
-Path toADT(current: (Pattern) `<Pattern p> / <Id id>`, StructuredGraph g)
-	= resolvePath(field(toADT(p, g), "<id>"), g);
-	
-Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`, StructuredGraph g)
-	= resolvePath(fieldType(toADT(p, g), toTypeName(id)), g);	
-	
-Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`, StructuredGraph g)
-	= resolvePath(deepMatchType(toADT(p, g), toTypeName(id)), g);		
-
-Path toADT(Pattern p, StructuredGraph g){
-	throw "Operation not yet implemented";
-}
+str prettyPrintAType(boolType()) = "bool";
 
 // ----  Collect definitions, uses and requirements -----------------------
 

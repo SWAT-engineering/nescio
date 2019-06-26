@@ -2,16 +2,11 @@ module lang::nescio::API
 
 import Relation;
 import Set;
+import IO;
+import ParseTree;
+import lang::nescio::Syntax;
 
 data TypeName = typeName(list[str] modules, str name);
-
-alias StructuredGraph = rel[TypeName typeName, str field, TypeName fieldType];
-
-alias Types = set[TypeName typeName];
-
-data PathConfig = pathConfig(list[loc] srcs = []);
-
-alias GraphCalculator = StructuredGraph(str moduleName, PathConfig cfg);
 
 data Path
     = field(Path src, str fieldName)
@@ -20,6 +15,48 @@ data Path
     | deepMatchType(Path src, TypeName typeName)
     ;
     
+
+TypeName toTypeName((ModuleId) `<{Id "::"}+ moduleName>`) = typeName(lst[0..-1], lst[-1])
+	when lst := ["<id>" | id <- moduleName];
+    
+Path toADT(current: (Pattern) `<ModuleId id>`, StructuredGraph g)
+	= resolvePath(rootType(toTypeName(id)), g);
+ 
+Path toADT(current: (Pattern) `<Pattern p> / <Id id>`, StructuredGraph g)
+	= resolvePath(field(toADT(p, g), "<id>"), g);
+	
+Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`, StructuredGraph g)
+	= resolvePath(fieldType(toADT(p, g), toTypeName(id)), g);	
+	
+Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`, StructuredGraph g)
+	= resolvePath(deepMatchType(toADT(p, g), toTypeName(id)), g);		
+
+Path toADT(Pattern p, StructuredGraph g){
+	throw "Operation not yet implemented";
+}
+
+
+alias StructuredGraph = rel[TypeName typeName, str field, TypeName fieldType];
+
+alias Types = set[TypeName typeName];
+
+data PathConfig = pathConfig(list[loc] srcs = []);
+
+alias ModuleMapper = loc(TypeName);
+
+alias GraphCalculator = StructuredGraph(list[loc] modules);
+
+alias ModulesComputer = list[loc](TypeName initial);
+
+StructuredGraph computeAggregatedStructuredGraph(loc nescioFile, ModulesComputer mc, GraphCalculator gc) {
+	start[Specification] spec = parse(#start[Specification], nescioFile);
+	list[TypeName] initialModules = [toTypeName(moduleId) |(Import) `import <ModuleId moduleId> from <Id _>` <- spec.top.imports];
+	list[loc] allModuleFiles = ([] | it +  mc(initialModule) | TypeName initialModule <- initialModules);
+	println("allModuleFiles: <allModuleFiles>");
+	return gc(allModuleFiles); 
+}
+
+
 data NamedPattern
 	=  pattern(str name, Path path);
 	
