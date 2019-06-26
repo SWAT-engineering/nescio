@@ -26,7 +26,8 @@ data NamedPattern
 data ResolutionException = typeNameDuplication()
 						 | notResolved();
 
-TypeName resolve(typeName([], name), StructuredGraph fields) {
+
+TypeName resolveType(typeName([], name), StructuredGraph fields) {
 	set[TypeName] allTypesWithName = {t1 | <t1:typeName(_, name), _, _> <- fields } 
 		+ {t1| <_, _, t1:typeName(_, name)> <- fields };
 	if (size(allTypesWithName) > 1)
@@ -38,24 +39,33 @@ TypeName resolve(typeName([], name), StructuredGraph fields) {
 	
 }
 
-default TypeName resolve(TypeName tn:typeName(pkg, name), StructuredGraph fields) = tn;
+default TypeName resolveType(TypeName tn:typeName(pkg, name), StructuredGraph fields) = tn;
+
+Path resolvePath(rootType(typeName),StructuredGraph fields) =
+	rootType(resolveType(typeName, fields));
+	
+Path resolvePath(field(src, fieldName), StructuredGraph fields) =
+	field(resolvePath(src, fields), fieldName);
+ 	
+Path resolvePath(fieldType(src, typedName), StructuredGraph fields) =
+	fieldType(resolvePath(src, fields), resolveType(typedName, fields));
+	
+Path resolvePath(deepMatchType(src, typedName), StructuredGraph fields) =
+	deepMatchType(resolvePath(src, fields), resolveType(typedName, fields));	 	
 
 Types getTypes(field(Path src, str fieldName), StructuredGraph fields)
 	= {fieldType | <typeName, fieldName, fieldType> <- fields, typeName in getTypes(src, fields)}; 
 
 Types getTypes(fieldType(Path src, TypeName fieldType), StructuredGraph fields)
-	= {resolvedFieldType | <typeName, _, resolvedFieldType> <- fields, typeName in getTypes(src, fields)}
-	when resolvedFieldType := resolve(fieldType, fields);
+	= {fieldType | <typeName, _, fieldType> <- fields, typeName in getTypes(src, fields)};
 
 Types getTypes(deepMatchType(Path src, TypeName typeName), StructuredGraph fields)
-	= resolvedTypeName in range(graph+) ? {resolvedTypeName} : {}  
-	when graph := {<tn, fieldType> | <tn, _, fieldType> <- fields},
-		 resolvedTypeName := resolve(typeName, fields);
+	= typeName in range(graph+) ? {typeName} : {}  
+	when graph := {<tn, fieldType> | <tn, _, fieldType> <- fields};
 	
 		
 Types getTypes(rootType(typeName), StructuredGraph fields)
-	= {resolvedTypeName | <resolvedTypeName, _, _> <- fields}
-	when resolvedTypeName := resolve(typeName, fields);
+	= {typeName | <typeName, _, _> <- fields};
 		
 /*bool isValidPath(Path p, StructuredGraph fields) =
 	_ <- [t | t <- types, t in leaves] 
@@ -65,4 +75,4 @@ Types getTypes(rootType(typeName), StructuredGraph fields)
 
 bool isValidPath(Path p, StructuredGraph fields) =
 	_ <- [t | t <- types] 
-	when types := getTypes(p, fields);
+	when types := getTypes(resolvePath(p, fields), fields);
