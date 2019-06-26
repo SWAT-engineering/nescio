@@ -82,8 +82,8 @@ Tree(Tree) checkNescio(map[str, GraphCalculator] langs) = Tree(Tree input){
 }; 
 
 void main() {
-	registerLanguage(NESCIO_LANG_NAME, "nescio", start[Program](str src, loc org) {
-		return parse(#start[Program], src, org);
+	registerLanguage(NESCIO_LANG_NAME, "nescio", start[Specification](str src, loc org) {
+		return parse(#start[Specification], src, org);
  	});
  	
  	registerContributions(NESCIO_LANG_NAME, {
