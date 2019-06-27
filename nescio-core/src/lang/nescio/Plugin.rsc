@@ -70,7 +70,7 @@ Tree checkNescio(Tree input){
          ; 
 }
 
-Tree(Tree) checkNescio(map[str, GraphCalculator] langs) = Tree(Tree input){
+Tree(Tree) checkNescio(map[str, LanguageConf] langs) = Tree(Tree input){
 	pcfg = config(input@\loc);
     model = nescioTModelFromTree(input, pcfg, langsConfig = langs); // your function that collects & solves
     types = getFacts(model);
