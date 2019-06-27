@@ -119,3 +119,8 @@ Types getTypes(rootType(typeName), StructuredGraph fields)
 bool isValidPath(Path p, StructuredGraph fields) =
 	_ <- [t | t <- types] 
 	when types := getTypes(resolvePath(p, fields), fields);
+	
+start[Specification] parseNescio(loc nescioSpec) = parse(#start[Specification], nescioSpec);
+
+start[Specification] parseNescio(str src, loc org) = parse(#start[Specification], src, org);
+	
