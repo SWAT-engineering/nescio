@@ -6,6 +6,7 @@ import util::Math;
 import ListRelation;
 import Set;
 import String;
+import IO;
 
 import util::Reflective;
 
@@ -50,19 +51,19 @@ str prettyPrintAType(boolType()) = "bool";
 // ----  Collect definitions, uses and requirements -----------------------
 
 
-void collect(current: (Specification) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`, Collector c){
+void collect(current: (Specification) `module <ModuleId moduleName> forLanguage <Id langId> rootNode <ModuleId rootId> <Import* imports> <Decl* decls>`, Collector c){
  	c.define("<moduleName>", moduleId(), current, defType(moduleType()));
     c.enterScope(current);
-    collect(imports, c);
-    if ([] !:= c.getStack(__NESCIO_GRAPHS_QUEUE)) {
-    	if (list[StructuredGraph] graphs := c.getStack(__NESCIO_GRAPHS_QUEUE)) {
-    		c.push(__AGGREGATED_GRAPH, ({} | it + g | g <- graphs));
-    	}
-    	else
-    		c.push(__AGGREGATED_GRAPH, {});
-    }
-    else
-    	c.push(__AGGREGATED_GRAPH, {});
+    
+    LanguagesConf langs = c.getConfig().langsConfig;
+	if ("<langId>" in langs) {
+	 	if (languageConf(GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm) := langs["<langId>"]) {
+			collectImports([i | i <- imports], gc, mc, mm, c);
+		}
+	}
+	else
+	 	c.report(error(langId, "There is not a registered graph calculator for language %v", "<langId>"));
+	
     currentScope = c.getScope();
     	collect(decls, c);
     c.leaveScope(current);
@@ -77,39 +78,35 @@ private loc project(loc file) {
    return |project://<file.authority>|;
 }
 
-private str __NESCIO_GRAPHS_QUEUE = "__nescioGraphsQueue";
 private str __AGGREGATED_GRAPH = "__nescioAggregatedGraph";
-private str __NESCIO_USED_LANGUAGE = "__nescioUsedLanguage";
 
-void collect(current:(Import) `import <ModuleId name> from <Id langId>`, Collector c) {
-	 LanguagesConf langs = c.getConfig().langsConfig;
-	 PathConfig pathConf = c.getConfig().pathConfig;
-	 if ("<langId>" in langs) {
-	 	GraphCalculator gc = langs["<langId>"];
-	 	try {
-	 		StructuredGraph graph = gc("<name>", pathConf);
-	 		c.push(__NESCIO_GRAPHS_QUEUE, graph);
-		 	if ([] !:= c.getStack(__NESCIO_USED_LANGUAGE)){
-		 		if (str usedLang := c.top(__NESCIO_USED_LANGUAGE), "<langId>" !:= usedLang) 
-	 				c.report(error(current, "All imports in this module need to be of the first imported language %v", "<langId>"));
-		 	}
-		 	else 
-		 		c.push(__NESCIO_USED_LANGUAGE, "<langId>");
-	 	}
-	 	catch IO(msg):{
+void collectImports(list[Import] imports, GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm, Collector c) {
+	 list[loc] modules = [];
+	 for ((Import) `import <ModuleId moduleName>` <- imports) {
+	 	TypeName moduleType = toTypeName(moduleName);
+	 	loc moduleLoc = mm(moduleType);
+	 	if (!exists(moduleLoc))
 	 		c.report(error(current, "Module %v not found", "<name>"));
-	 	};
-	 }
-	 else
-	 	c.report(error(current, "There is not a registered graph calculator for language %v", "<langId>"));
+	 	else
+	 		modules = modules + mc(moduleType);
+	 }	 
+	 c.push(__AGGREGATED_GRAPH, gc(modules));
 }
 
 void collect(current: Pattern p, Collector c) {
 	//println(path);
 	if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
-		Path path = toADT(p, graph);
-		if (!isValidPath(path, graph)) 
-			c.report(error(current, "Path is not valid"));
+		try {
+			Path path = toADT(p, graph);
+			if (!isValidPath(path, graph)) 
+				c.report(error(current, "Path is not valid"));
+		}
+		catch typeNameDuplication(typeName): {
+			c.report(error(current, "Type <typeName> is duplicated"));
+		}
+		catch notResolved(typeName):{ 
+			c.report(error(current, "Type <typeName> could not be resolved"));
+		};
 	}
 	else
 		c.report(error(current, "Cannot check path since there is not a registered graph calculator"));
@@ -213,7 +210,6 @@ void collect(current: (Expr) `<NatLiteral nat>`, Collector c){
 }
 
 // ----  Examples & Tests --------------------------------
-alias LanguagesConf = map[str langId, GraphCalculator gc];
 
 data TypePalConfig(
     LanguagesConf langsConfig = (),
