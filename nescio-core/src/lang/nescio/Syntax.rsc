@@ -4,6 +4,8 @@ extend lang::std::Layout;
 
 start syntax Specification =
 	"module" ModuleId
+	"forLanguage" Id langId
+	"rootNode" ModuleId rootId
 	Import* imports
 	Decl* declarations;
 	
@@ -22,7 +24,7 @@ lexical ModuleId
     ;
 
 syntax Import
-	= "import" ModuleId moduleId "from" Id langId
+	= "import" ModuleId moduleId
 	;
 	
 syntax Prog

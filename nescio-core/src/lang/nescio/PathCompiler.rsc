@@ -44,7 +44,7 @@ str getModuleName(current: (Specification) `module <ModuleId moduleName> <Import
 //	= ["<part>" | part <- moduleName.moduleName][-1];
 	= "<moduleName>";
 	
-Rules evalNescio(current: (Specification) `module <ModuleId moduleName> <Import* imports> <Decl* decls>`, StructuredGraph graph){
+Rules evalNescio(current: (Specification) `module <ModuleId moduleName> forLanguage <Id lang> rootNode <ModuleId rootNode> <Import* imports> <Decl* decls>`, StructuredGraph graph){
 	Rules rules = ();
 	
 	map[Id, ConstantDecl] constantDecls = (() | it + (id : cd) | (Decl) `<ConstantDecl cd>` <- decls, (ConstantDecl) `<Type ty> <Id id> = <Expr e>` := cd);
@@ -81,11 +81,12 @@ PathConfig getDefaultPathConfig() = pathConfig(srcs = [], defs = []);
 
 start[Specification] parseNescio(loc nescioSpec) = parse(#start[Specification], nescioSpec);
 
-Rules evalNescio(start[Specification] nescioSpec, StructuredGraph graph) {
-	return evalNescio(nescioSpec.top, graph);
-}
+TypeName getRoot((start[Specification]) `module <ModuleId _> forLanguage <Id _> rootNode <ModuleId rootNode> <Import* _> <Decl* _>`, StructuredGraph graph) =
+	toTypeName(rootNode);
+	
+TypeName getRoot(loc nescioSpec, StructuredGraph graph) = getRoot(parseNescio(nescioSpec), graph);
 
-Rules evalNescio(loc nescioSpec, StructuredGraph graph) {
-	return evalNescio(parseNescio(nescioSpec), graph);
-}
+Rules evalNescio(start[Specification] nescioSpec, StructuredGraph graph) = evalNescio(nescioSpec.top, graph);
+
+Rules evalNescio(loc nescioSpec, StructuredGraph graph) = evalNescio(parseNescio(nescioSpec), graph);
 
