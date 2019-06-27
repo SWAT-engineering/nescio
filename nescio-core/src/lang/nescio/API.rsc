@@ -35,6 +35,9 @@ Path toADT(Pattern p, StructuredGraph g){
 	throw "Operation not yet implemented";
 }
 
+data LanguageConf = languageConf(GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm);
+
+alias LanguagesConf = map[str langId, LanguageConf lc];
 
 alias StructuredGraph = rel[TypeName typeName, str field, TypeName fieldType];
 
@@ -48,29 +51,32 @@ alias GraphCalculator = StructuredGraph(list[loc] modules);
 
 alias ModulesComputer = list[loc](TypeName initial);
 
+StructuredGraph computeAggregatedStructuredGraph(start[Specification] spec, ModulesComputer mc, GraphCalculator gc) {
+	list[TypeName] initialModules = [toTypeName(moduleId) |(Import) `import <ModuleId moduleId>` <- spec.top.imports];
+	list[loc] allModuleFiles = ([] | it +  mc(initialModule) | TypeName initialModule <- initialModules);
+	return gc(allModuleFiles); 
+}
+
 StructuredGraph computeAggregatedStructuredGraph(loc nescioFile, ModulesComputer mc, GraphCalculator gc) {
 	start[Specification] spec = parse(#start[Specification], nescioFile);
-	list[TypeName] initialModules = [toTypeName(moduleId) |(Import) `import <ModuleId moduleId> from <Id _>` <- spec.top.imports];
-	list[loc] allModuleFiles = ([] | it +  mc(initialModule) | TypeName initialModule <- initialModules);
-	println("allModuleFiles: <allModuleFiles>");
-	return gc(allModuleFiles); 
+	return computeAggregatedStructuredGraph(spec, mc, gc);
 }
 
 
 data NamedPattern
 	=  pattern(str name, Path path);
 	
-data ResolutionException = typeNameDuplication()
-						 | notResolved();
+data ResolutionException = typeNameDuplication(str name)
+						 | notResolved(str name);
 
 
 TypeName resolveType(typeName([], name), StructuredGraph fields) {
 	set[TypeName] allTypesWithName = {t1 | <t1:typeName(_, name), _, _> <- fields } 
 		+ {t1| <_, _, t1:typeName(_, name)> <- fields };
 	if (size(allTypesWithName) > 1)
-		throw typeNameDuplication();
+		throw typeNameDuplication(name);
 	else if (size(allTypesWithName) == 0)
-		throw notResolved();
+		throw notResolved(name);
 	else
 		return getOneFrom(allTypesWithName);
 	
