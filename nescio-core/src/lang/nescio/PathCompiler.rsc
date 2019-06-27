@@ -79,8 +79,6 @@ Rules evalNescio(current: (Specification) `module <ModuleId moduleName> forLangu
 
 PathConfig getDefaultPathConfig() = pathConfig(srcs = [], defs = []);
 
-start[Specification] parseNescio(loc nescioSpec) = parse(#start[Specification], nescioSpec);
-
 TypeName getRoot((start[Specification]) `module <ModuleId _> forLanguage <Id _> rootNode <ModuleId rootNode> <Import* _> <Decl* _>`, StructuredGraph graph) =
 	resolveType(toTypeName(rootNode), graph);
 	

@@ -100,11 +100,11 @@ void collectRootNode(ModuleId rootId, Collector c) {
 
 void collectImports(list[Import] imports, GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm, Collector c) {
 	 list[loc] modules = [];
-	 for ((Import) `import <ModuleId moduleName>` <- imports) {
+	 for (current: (Import) `import <ModuleId moduleName>` <- imports) {
 	 	TypeName moduleType = toTypeName(moduleName);
 	 	loc moduleLoc = mm(moduleType);
 	 	if (!exists(moduleLoc))
-	 		c.report(error(current, "Module %v not found", "<name>"));
+	 		c.report(error(current, "Module %v not found", "<moduleName>"));
 	 	else
 	 		modules = modules + mc(moduleType);
 	 }	 
