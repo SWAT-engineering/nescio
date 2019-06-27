@@ -64,6 +64,8 @@ void collect(current: (Specification) `module <ModuleId moduleName> forLanguage 
 	else
 	 	c.report(error(langId, "There is not a registered graph calculator for language %v", "<langId>"));
 	
+	collectRootNode(rootId, c);
+	
     currentScope = c.getScope();
     	collect(decls, c);
     c.leaveScope(current);
@@ -79,6 +81,22 @@ private loc project(loc file) {
 }
 
 private str __AGGREGATED_GRAPH = "__nescioAggregatedGraph";
+private str __ROOT_NODE = "__nescioRootNode";
+
+void collectRootNode(ModuleId rootId, Collector c) {
+	if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
+		try {
+			TypeName rootType = resolveType(toTypeName(rootId), graph);
+			c.push(__ROOT_NODE, rootType);
+		}
+		catch typeNameDuplication(typeName): {
+			c.report(error(rootId, "Type <rootType> is duplicated"));
+		}
+		catch notResolved(typeName):{ 
+			c.report(error(rootId, "Type <rootType> could not be resolved"));
+		};
+	}
+}
 
 void collectImports(list[Import] imports, GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm, Collector c) {
 	 list[loc] modules = [];
@@ -95,21 +113,25 @@ void collectImports(list[Import] imports, GraphCalculator gc,  ModulesComputer m
 
 void collect(current: Pattern p, Collector c) {
 	//println(path);
-	if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
-		try {
-			Path path = toADT(p, graph);
-			if (!isValidPath(path, graph)) 
-				c.report(error(current, "Path is not valid"));
+	if (TypeName rootType := c.top(__ROOT_NODE)) {
+		if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
+			try {
+				Path path = toADT(p, rootType, graph);
+				if (!isValidPath(path, graph)) 
+					c.report(error(current, "Path is not valid"));
+			}
+			catch typeNameDuplication(typeName): {
+				c.report(error(current, "Type <typeName> is duplicated"));
+			}
+			catch notResolved(typeName):{ 
+				c.report(error(current, "Type <typeName> could not be resolved"));
+			};
 		}
-		catch typeNameDuplication(typeName): {
-			c.report(error(current, "Type <typeName> is duplicated"));
-		}
-		catch notResolved(typeName):{ 
-			c.report(error(current, "Type <typeName> could not be resolved"));
-		};
+		else
+			c.report(error(current, "Cannot check path since there is not a registered graph calculator"));
 	}
-	else
-		c.report(error(current, "Cannot check path since there is not a registered graph calculator"));
+	else 
+		c.report(error(current, "Cannot check path since there is not a validly defined root node"));
 }
 
 void collect(current: (Decl) `rule <Id id> : <Pattern pattern> =\> <Id trId> <Args? args>`, Collector c){

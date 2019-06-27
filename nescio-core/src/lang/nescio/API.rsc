@@ -19,19 +19,19 @@ data Path
 TypeName toTypeName((ModuleId) `<{Id "::"}+ moduleName>`) = typeName(lst[0..-1], lst[-1])
 	when lst := ["<id>" | id <- moduleName];
     
-Path toADT(current: (Pattern) `<ModuleId id>`, StructuredGraph g)
-	= resolvePath(rootType(toTypeName(id)), g);
+Path toADT(current: (Pattern) ``, TypeName rootNode, StructuredGraph g)
+	= resolvePath(rootType(rootNode), g);
  
-Path toADT(current: (Pattern) `<Pattern p> / <Id id>`, StructuredGraph g)
-	= resolvePath(field(toADT(p, g), "<id>"), g);
+Path toADT(current: (Pattern) `<Pattern p> / <Id id>`, TypeName rootNode, StructuredGraph g)
+	= resolvePath(field(toADT(p, rootNode, g), "<id>"), g);
 	
-Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`, StructuredGraph g)
-	= resolvePath(fieldType(toADT(p, g), toTypeName(id)), g);	
+Path toADT(current: (Pattern) `<Pattern p> / [<ModuleId id>]`, TypeName rootNode, StructuredGraph g)
+	= resolvePath(fieldType(toADT(p, rootNode, g), toTypeName(id)), g);	
 	
-Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`, StructuredGraph g)
-	= resolvePath(deepMatchType(toADT(p, g), toTypeName(id)), g);		
+Path toADT(current: (Pattern) `<Pattern p> / ** / <ModuleId id>`, TypeName rootNode, StructuredGraph g)
+	= resolvePath(deepMatchType(toADT(p, rootNode, g), toTypeName(id)), g);		
 
-Path toADT(Pattern p, StructuredGraph g){
+Path toADT(Pattern p, TypeName rootNode, StructuredGraph g){
 	throw "Operation not yet implemented";
 }
 

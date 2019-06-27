@@ -45,7 +45,7 @@ syntax Rule
 	;	
 
 syntax Pattern
-	= ModuleId
+	= ""
 	| Pattern "\a2F" Id
 	| Pattern "\a2F" "[" ModuleId "]"
 	| Pattern "\a2F" "**" "\a2F"  ModuleId

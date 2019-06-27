@@ -68,7 +68,7 @@ Rules evalNescio(current: (Specification) `module <ModuleId moduleName> forLangu
  	
  	for ((Decl) `rule <Id ruleName> : <Pattern p> =\> <Id algo> <Args? args>` <- decls) {
  		try {
- 			rules = rules + ("<ruleName>" : <toADT(p, graph), <javaClasses[algo], [evalExpr(e, constants) |aargs <- args, e <- aargs.args]>>);
+ 			rules = rules + ("<ruleName>" : <toADT(p, resolveType(toTypeName(rootNode), graph), graph), <javaClasses[algo], [evalExpr(e, constants) |aargs <- args, e <- aargs.args]>>);
  		}
  		catch _:{
  		};
@@ -82,7 +82,7 @@ PathConfig getDefaultPathConfig() = pathConfig(srcs = [], defs = []);
 start[Specification] parseNescio(loc nescioSpec) = parse(#start[Specification], nescioSpec);
 
 TypeName getRoot((start[Specification]) `module <ModuleId _> forLanguage <Id _> rootNode <ModuleId rootNode> <Import* _> <Decl* _>`, StructuredGraph graph) =
-	toTypeName(rootNode);
+	resolveType(toTypeName(rootNode), graph);
 	
 TypeName getRoot(loc nescioSpec, StructuredGraph graph) = getRoot(parseNescio(nescioSpec), graph);
 
