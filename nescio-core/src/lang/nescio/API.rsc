@@ -51,15 +51,23 @@ alias GraphCalculator = StructuredGraph(list[loc] modules);
 
 alias ModulesComputer = list[loc](TypeName initial);
 
-StructuredGraph computeAggregatedStructuredGraph(start[Specification] spec, ModulesComputer mc, GraphCalculator gc) {
-	list[TypeName] initialModules = [toTypeName(moduleId) |(Import) `import <ModuleId moduleId>` <- spec.top.imports];
+StructuredGraph computeAggregatedStructuredGraph(Specification spec, ModulesComputer mc, GraphCalculator gc) {
+	list[TypeName] initialModules = [toTypeName(moduleId) |(Import) `import <ModuleId moduleId>` <- spec.imports];
 	list[loc] allModuleFiles = ([] | it +  mc(initialModule) | TypeName initialModule <- initialModules);
 	return gc(allModuleFiles); 
 }
 
+StructuredGraph computeAggregatedStructuredGraph(Tree tree, ModulesComputer mc, GraphCalculator gc) {
+	Tree pt = (tree has top)?tree.top:tree;
+	if (Specification spec := pt) {
+		return computeAggregatedStructuredGraph(pt, mc, gc);
+	}
+	throw "Not a Nescio spec";
+}
+
 StructuredGraph computeAggregatedStructuredGraph(loc nescioFile, ModulesComputer mc, GraphCalculator gc) {
 	start[Specification] spec = parse(#start[Specification], nescioFile);
-	return computeAggregatedStructuredGraph(spec, mc, gc);
+	return computeAggregatedStructuredGraph(spec.top, mc, gc);
 }
 
 
