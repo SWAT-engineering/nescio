@@ -84,6 +84,15 @@ TypeName getRoot((start[Specification]) `module <ModuleId _> forLanguage <Id _> 
 	
 TypeName getRoot(loc nescioSpec, StructuredGraph graph) = getRoot(parseNescio(nescioSpec), graph);
 
+	
+TypeName getRoot(loc nescioSpec, StructuredGraph graph) = getRoot(parseNescio(nescioSpec), graph);
+
+
+list[TypeName] getImported((start[Specification]) `module <ModuleId _> forLanguage <Id _> rootNode <ModuleId _> <Import* imported> <Decl* _>`, StructuredGraph graph) =
+	[resolveType(toTypeName(i.moduleId), graph) | Import i <- imported];
+	
+TypeName getImported(loc nescioSpec, StructuredGraph graph) = getImported(parseNescio(nescioSpec), graph);	
+
 Rules evalNescio(start[Specification] nescioSpec, StructuredGraph graph) = evalNescio(nescioSpec.top, graph);
 
 Rules evalNescio(loc nescioSpec, StructuredGraph graph) = evalNescio(parseNescio(nescioSpec), graph);
