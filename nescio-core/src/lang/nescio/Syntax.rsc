@@ -3,7 +3,7 @@ module lang::nescio::Syntax
 extend lang::std::Layout;
 
 start syntax Specification =
-	"module" ModuleId
+	"module" ModuleId moduleId
 	"forLanguage" Id langId
 	"rootNode" ModuleId rootId
 	Import* imports
