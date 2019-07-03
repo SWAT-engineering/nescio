@@ -51,18 +51,20 @@ str prettyPrintAType(boolType()) = "bool";
 // ----  Collect definitions, uses and requirements -----------------------
 
 
-void collect(current: (Specification) `module <ModuleId moduleName> forLanguage <Id langId> rootNode <ModuleId rootId> <Import* imports> <Decl* decls>`, Collector c){
+void collect(current: (Specification) `module <ModuleId moduleName> forLanguage <Id langId> rootNode <ModuleId rootId> <Import* imports> <Decl* decls>`, PathConfig pathConf, Collector c){
  	c.define("<moduleName>", moduleId(), current, defType(moduleType()));
     c.enterScope(current);
-    
     LanguagesConf langs = c.getConfig().langsConfig;
 	if ("<langId>" in langs) {
 	 	if (languageConf(GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm) := langs["<langId>"]) {
-			collectImports([i | i <- imports], gc, mc, mm, c);
+			StructuredGraph g = collectImports([i | i <- imports], gc, mc, mm, pathConf, c);
+			c.push(__AGGREGATED_GRAPH, g);
 		}
 	}
-	else
+	else {
+	 	c.push(__AGGREGATED_GRAPH, {});
 	 	c.report(error(langId, "There is not a registered graph calculator for language %v", "<langId>"));
+	}
 	
 	collectRootNode(rootId, c);
 	
@@ -73,11 +75,19 @@ void collect(current: (Specification) `module <ModuleId moduleName> forLanguage 
 
 // ---- Modules and imports
 
-data PathConfig(loc target = |cwd:///|);
-
 private loc project(loc file) {
    assert file.scheme == "project";
    return |project://<file.authority>|;
+}
+
+data PathConfig = pathConfig(list[loc] srcs = [], list[loc] libs = []);
+
+PathConfig pathConfig(loc file) {
+   assert file.scheme == "project";
+
+   p = project(file);      
+ 
+   return pathConfig(srcs = [ p + "nescio-src"]);
 }
 
 private str __AGGREGATED_GRAPH = "__nescioAggregatedGraph";
@@ -89,46 +99,54 @@ void collectRootNode(ModuleId rootId, Collector c) {
 			TypeName rootType = resolveType(toTypeName(rootId), graph);
 			c.push(__ROOT_NODE, rootType);
 		}
-		catch typeNameDuplication(typeName): {
+		catch typeNameDuplication(rootType): {
 			c.report(error(rootId, "Type <rootType> is duplicated"));
 		}
-		catch notResolved(typeName):{ 
+		catch notResolved(rootType):{ 
 			c.report(error(rootId, "Type <rootType> could not be resolved"));
 		};
 	}
+	
 }
 
-void collectImports(list[Import] imports, GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm, Collector c) {
+StructuredGraph collectImports(list[Import] imports, GraphCalculator gc,  ModulesComputer mc, ModuleMapper mm, PathConfig pathConf, Collector c) {
 	 list[loc] modules = [];
 	 for (current: (Import) `import <ModuleId moduleName>` <- imports) {
 	 	TypeName moduleType = toTypeName(moduleName);
-	 	loc moduleLoc = mm(moduleType);
-	 	if (!exists(moduleLoc))
+	 	bool found = false;
+	 	for (loc base <- pathConf.srcs) {
+	 		loc moduleLoc = mm(base, moduleType);
+	 		if (exists(moduleLoc)) {
+	 			modules = modules + mc(moduleType);
+	 			found = true;
+	 		}
+	 	}
+	 	if (!found)
 	 		c.report(error(current, "Module %v not found", "<moduleName>"));
-	 	else
-	 		modules = modules + mc(moduleType);
 	 }	 
-	 c.push(__AGGREGATED_GRAPH, gc(modules));
+	 return gc(modules);
 }
 
 void collect(current: Pattern p, Collector c) {
 	//println(path);
-	if (TypeName rootType := c.top(__ROOT_NODE)) {
-		if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
-			try {
-				Path path = toADT(p, rootType, graph);
-				if (!isValidPath(path, graph)) 
-					c.report(error(current, "Path is not valid"));
+	if ([] !:= c.getStack(__ROOT_NODE)) {
+		if (TypeName rootType := c.top(__ROOT_NODE)) {
+			if (StructuredGraph graph := c.top(__AGGREGATED_GRAPH)) {
+				try {
+					Path path = toADT(p, rootType, graph);
+					if (!isValidPath(path, graph)) 
+						c.report(error(current, "Path is not valid"));
+				}
+				catch typeNameDuplication(name): {
+					c.report(error(current, "Type <name> is duplicated"));
+				}
+				catch notResolved(name):{ 
+					c.report(error(current, "Type <name> could not be resolved"));
+				};
 			}
-			catch typeNameDuplication(typeName): {
-				c.report(error(current, "Type <typeName> is duplicated"));
-			}
-			catch notResolved(typeName):{ 
-				c.report(error(current, "Type <typeName> could not be resolved"));
-			};
-		}
-		else
+			else
 			c.report(error(current, "Cannot check path since there is not a registered graph calculator"));
+		}
 	}
 	else 
 		c.report(error(current, "Cannot check path since there is not a validly defined root node"));
@@ -239,10 +257,11 @@ data TypePalConfig(
 );
 
 
-TModel nescioTModelFromTree(Tree pt, PathConfig pcfg, LanguagesConf langsConfig = (), bool debug = false){
+TModel nescioTModelFromTree(Tree pt, PathConfig pathConf = pathConfig(pt@\loc), LanguagesConf langsConfig = (), bool debug = false){
     if (pt has top) pt = pt.top;
-    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig, pcfg));
-   	collect(pt, c);
+    println("Nescio: Version 1.0");
+    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig, pathConf));
+   	collect(pt, pathConf, c);
     return newSolver(pt, c.run()).run();
 }
 
