@@ -45,7 +45,7 @@ alias Types = set[TypeName typeName];
 
 data PathConfig = pathConfig(list[loc] srcs = []);
 
-alias ModuleMapper = loc(TypeName);
+alias ModuleMapper = loc(loc base, TypeName tn);
 
 alias GraphCalculator = StructuredGraph(list[loc] modules);
 
