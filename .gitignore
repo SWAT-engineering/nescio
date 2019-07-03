@@ -1,3 +1,4 @@
 bin/**
 nescio-core/target/**
 nescio-framework/bin/**
+nescio-framework/target/**
