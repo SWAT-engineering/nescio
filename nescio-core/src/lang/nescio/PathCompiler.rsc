@@ -57,24 +57,22 @@ Rules evalNescio(current: (Specification) `module <ModuleId moduleName> forLangu
 	
 	map[Id, str] javaClasses = ();
 	
-	for ((ConstantDecl) `<Type ty> <Id id> = <Expr e>` <- orderedConstants) {
-		tuple[JavaType, str] constantVal = evalExpr(e, constantDecls);
-		constants = constants + (id : constantVal);
-	}
-	
 	for ((Decl) `@ (<JavaId javaId>) algorithm <Id id> <Formals? fls>` <- decls) {
  		javaClasses = javaClasses + (id : "<javaId>");
  	}
  	
  	for ((Decl) `rule <Id ruleName> : <Pattern p> =\> <Id algo> <Args? args>` <- decls) {
  		try {
- 			rules = rules + ("<ruleName>" : <toADT(p, resolveType(toTypeName(rootNode), graph), graph), <javaClasses[algo], [evalExpr(e, constants) |aargs <- args, e <- aargs.args]>>);
+ 			rules = rules + ("<ruleName>" : <toADT(p, resolveType(toTypeName(rootNode), graph), graph), <javaClasses[algo], [evalExpr(e, constantDecls) |aargs <- args, e <- aargs.args]>>); 			
  		}
- 		catch _:{
+ 		catch str ex:{
+ 			println("Error in rule <ruleName>:\n<e>");
+ 		}
+ 		catch: {
+ 			println("Error in rule <ruleName>");
  		};
- 	} 	
-	
-	return rules;	
+ 	} 
+ 	return rules;	
 }
 
 PathConfig getDefaultPathConfig() = pathConfig(srcs = [], defs = []);
