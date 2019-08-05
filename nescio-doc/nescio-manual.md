@@ -197,14 +197,12 @@ The Bird/Nescio IDE allows users to develop Bird data descriptions and generate 
 The Bird/Nescio IDE is based on Eclipse and the Rascal Language Workbench (www.rascal-mpl.org/). These are the steps to install it and create a new Bird/Nescio project:
 
 1. Download Eclipse IDE for RCP and RAP Developers, available at www.eclipse.org/downloads/packages/
-2. Copy the Bird/Nescio plugin to a local folder (bird-nescio-update-site-1.1.0-SNAPSHOT.zip)
-3. Once in the Eclipse IDE, go to the menu Help -> Install New Software...
-4. On the "Install" dialog, select "Add..."
-5. On the "Add Repository" dialog, select "Archive..." and then select the file downloaded in step 2. The "Location" text box will contain the local address of the file. Click on the button "Add".
-6. Back on the "Install" dialog, you can see that there is a new item called "Bird/Nescio DSLs" next to a checkbox. Check it and press "Next>".
-7. The Install Details of the selected component are displayed. Press "Next>".
-8. The license details for the selected component are displayed. Accept the terms and press "Finish". The plugin will start its installation. At some point, a security warning dialog will be presented. Click on the "Install anyway" button.
-9. A dialog soliciting the restart of Eclipse is presented. Click on "Restart Now". After the restart, the Eclipse Bird/Nescio IDE is succesfully installed.
+2. Once in the Eclipse IDE, go to the menu Help -> Install New Software...
+3. On the "Install" dialog, next to the "Work with" textbox, type https://nescio.swat.engineering/update-site/ and stroke the Enter key.
+4. You can see that there is a new item called "Bird/Nescio DSLs" next to a checkbox. Check it and press "Next>".
+5. The Install Details of the selected component are displayed. Press "Next>".
+6. The license details for the selected component are displayed. Accept the terms and press "Finish". The plugin will start its installation. At some point, a security warning dialog will be presented. Click on the "Install anyway" button.
+7. A dialog soliciting the restart of Eclipse is presented. Click on "Restart Now". After the restart, the Eclipse Bird/Nescio IDE is succesfully installed.
 
 ### Creating a blank project on the Bird/Nescio IDE
 
