@@ -10,9 +10,9 @@ The main idea behind Nescio is to avoid the discrepancy between a document that 
 
 ## Nescio and Bird
 
-The first language integrated with Nescio, is [Bird](https://gitlab.com/swat.engineering/bird/), a language for declaratively describing binary data. Refer to that project to install an IDE that supports Nescio definitions on Bird specifications. 
+The first language integrated with Nescio, is [Bird](https://github.com/SWAT-engineering/bird/), a language for declaratively describing binary data. Refer to that project to install an IDE that supports Nescio definitions on Bird specifications. 
 
-The [Nescio manual](https://gitlab.com/swat.engineering/nescio/blob/master/nescio-doc/nescio-manual.md) presents a detailed introduction to Nescio and on how to use it together with Bird.
+The [Nescio manual](https://github.com/SWAT-engineering/nescio/blob/master/nescio-doc/nescio-manual.md) presents a detailed introduction to Nescio and on how to use it together with Bird.
 
 ## Sub-projects
 
@@ -22,4 +22,4 @@ The Nescio project consist of several interrelated components, which are subproj
 - nescio-core: Nescio toolset developed in Rascal. It includes the grammar definition, type checker, generator, and generic components for the integration with other languages.
 - nescio-doc: nescio documentation.
 
-In order to build them all, clone this project and execute `mvn install` on the root subdirectory. Notice that it is necessary to build the [Bird project](https://gitlab.com/swat.engineering/bird) afterwards if one wants to try the Nescio IDE (in this case, integrated with the Bird language).
+In order to build them all, clone this project and execute `mvn install` on the root subdirectory. Notice that it is necessary to build the [Bird project](https://github.com/SWAT-engineering/bird/) afterwards if one wants to try the Nescio IDE (in this case, integrated with the Bird language).
