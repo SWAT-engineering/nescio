@@ -192,7 +192,7 @@ public class ToChar {
 
 The Bird/Nescio IDE allows users to develop Bird data descriptions and generate anonymizers based on Nescio specifications.
 
-###Installing the Bird/Nescio IDE
+### Installing the Bird/Nescio IDE
 
 The Bird/Nescio IDE is based on Eclipse and the Rascal Language Workbench (www.rascal-mpl.org/). These are the steps to install it and create a new Bird/Nescio project:
 
