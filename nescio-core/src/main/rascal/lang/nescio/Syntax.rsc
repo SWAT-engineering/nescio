@@ -2,6 +2,9 @@ module lang::nescio::Syntax
 
 extend lang::std::Layout;
 
+import ParseTree;
+
+
 start syntax Specification =
 	"module" ModuleId moduleId
 	"forLanguage" Id langId
@@ -108,4 +111,8 @@ lexical UnicodeEscape
 	| ascii: "\\" [a] [0-7] [0-9A-Fa-f]
 	;
 
+private start[Specification] (value, loc) nescioParser = parser(#start[Specification]);
+
+// either invoke with (str content, loc origin) or (loc content, loc origin)
+start[Specification] (value, loc) getNescioParser() = nescioParser;
 

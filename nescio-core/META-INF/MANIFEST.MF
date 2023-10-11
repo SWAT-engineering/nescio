@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: nescio-core
-Bundle-SymbolicName: nescio-core;singleton:=true
-Bundle-Version: 1.1.0.qualifier
-Require-Bundle: rascal_eclipse, 
- typepal
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8

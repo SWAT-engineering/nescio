@@ -10,13 +10,13 @@ import IO;
 
 import util::Reflective;
 
-
 extend analysis::typepal::TypePal;
 extend analysis::typepal::TestFramework;
 
 lexical ConsId =  "$" ([a-z A-Z 0-9 _] !<< [a-z A-Z _][a-z A-Z 0-9 _]* !>> [a-z A-Z 0-9 _])\Reserved;
 
 anno bool Type@bounded;
+
 
 data AType
 	= moduleType()
@@ -172,25 +172,25 @@ void collect(current: (Decl) `rule <Id id> : <Pattern pattern> =\> <Id trId> <Ar
 		});
 }
 
-void collect(current: (Decl) `rule <Id id> : <Pattern pattern> =\> <Id trId> <Args? args>`, Collector c){
- 	c.define("<id>", ruleId(), current, defType(expr));
-	// collect(pattern, c);
-	c.use(trId, {trafoId()});
-	for (aargs <- args, e <- aargs.args) {
-		collect(e, c);
-	}
-	c.require("transformations arguments", current, 
-			  [trId] + [e | aargs <- args, e <- aargs.args], void (Solver s) {
-			ty = s.getType(trId);  
-			if (trafoType(id,formals) := ty) {
-				argTypes = [ s.getType(e) | aargs <- args, e <- aargs.args];
-				s.requireEqual(atypeList(argTypes), atypeList(formals), error(current, "Wrong type of arguments for the transformation"));
-			}	
-			else{
-				s.report(error(current, "Transformation arguments only apply to transformation types but got %t", ty));
-			}
-		});
-}
+// void collect(current: (Decl) `rule <Id id> : <Pattern pattern> =\> <Id trId> <Args? args>`, Collector c){
+//  	c.define("<id>", ruleId(), current, defType(expr));
+// 	// collect(pattern, c);
+// 	c.use(trId, {trafoId()});
+// 	for (aargs <- args, e <- aargs.args) {
+// 		collect(e, c);
+// 	}
+// 	c.require("transformations arguments", current, 
+// 			  [trId] + [e | aargs <- args, e <- aargs.args], void (Solver s) {
+// 			ty = s.getType(trId);  
+// 			if (trafoType(id,formals) := ty) {
+// 				argTypes = [ s.getType(e) | aargs <- args, e <- aargs.args];
+// 				s.requireEqual(atypeList(argTypes), atypeList(formals), error(current, "Wrong type of arguments for the transformation"));
+// 			}	
+// 			else{
+// 				s.report(error(current, "Transformation arguments only apply to transformation types but got %t", ty));
+// 			}
+// 		});
+// }
 
 void collect(current: (Decl) `@ (<JavaId jId>) algorithm <Id id> <Formals? fs>`, Collector c) {
 	for (afs <- fs, f <- afs.formals) 
@@ -260,7 +260,7 @@ data TypePalConfig(
 TModel nescioTModelFromTree(Tree pt, PathConfig pathConf = pathConfig(pt@\loc), LanguagesConf langsConfig = (), bool debug = false){
     if (pt has top) pt = pt.top;
     println("Nescio: Version 1.0");
-    c = newCollector("collectAndSolve", pt, config=getNescioConfig(langsConfig, pathConf));
+    c = newCollector("collectAndSolve", pt, getNescioConfig(langsConfig, pathConf));
    	collect(pt, pathConf, c);
     return newSolver(pt, c.run()).run();
 }
@@ -280,4 +280,3 @@ list[Message] runNescio(str name, bool debug = false) {
     TModel tm = nescioTModelFromTree(pt, debug = debug);
     return tm.messages;
 }
- 
